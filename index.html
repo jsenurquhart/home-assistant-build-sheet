@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Home Assistant Build Sheet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Public+Sans:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a spec sheet. Narrow reading column, labelled spec rows, one wiring diagram, protocol colour chips. */
+:root { color-scheme: light dark;
+  --bg: #f5f7f9;
+  --panel: #ffffff;
+  --ink: #15202b;
+  --muted: #5a6876;
+  --line: #d9e0e7;
+  --accent: #0b78a8;
+  --accent-soft: #e3f2f9;
+  --zigbee: #b26b00;  --zigbee-bg: #fbf0dc;
+  --zwave: #6a43b8;   --zwave-bg: #efe9fa;
+  --wifi: #0b78a8;    --wifi-bg: #e3f2f9;
+  --matter: #1f8a5b;  --matter-bg: #e2f4ea;
+  --ble: #b5365a;     --ble-bg: #fbe6ec;
+  --poe: #3d556b;     --poe-bg: #e6ecf1;
+  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body: "Public Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f151b; --panel: #161f27; --ink: #e4ebf1; --muted: #93a2b0; --line: #2a3742;
+  --accent: #4cb8e6; --accent-soft: #15303d;
+  --zigbee: #f0b357; --zigbee-bg: #3a2c14; --zwave: #b79bf0; --zwave-bg: #2b2343;
+  --wifi: #4cb8e6; --wifi-bg: #15303d; --matter: #5fcf98; --matter-bg: #163527;
+  --ble: #f08aa6; --ble-bg: #3d1c27; --poe: #a9bccd; --poe-bg: #26323d;
+  color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0f151b; --panel: #161f27; --ink: #e4ebf1; --muted: #93a2b0; --line: #2a3742;
+  --accent: #4cb8e6; --accent-soft: #15303d;
+  --zigbee: #f0b357; --zigbee-bg: #3a2c14; --zwave: #b79bf0; --zwave-bg: #2b2343;
+  --wifi: #4cb8e6; --wifi-bg: #15303d; --matter: #5fcf98; --matter-bg: #163527;
+  --ble: #f08aa6; --ble-bg: #3d1c27; --poe: #a9bccd; --poe-bg: #26323d;
+  color-scheme: dark; }
+
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.55; }
+.wrap { max-width: 920px; margin: 0 auto; padding-block: 40px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 48px; }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; line-height: 1.15; }
+h1 { font-size: clamp(2rem, 5vw, 3rem); font-weight: 700; letter-spacing: -0.02em; }
+h2 { font-size: 1.6rem; font-weight: 700; }
+h3 { font-size: 1.1rem; font-weight: 700; }
+p { margin: 0; max-width: 65ch; }
+.eyebrow { font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }
+.lede { color: var(--muted); font-size: 1.1rem; }
+section { display: grid; gap: 18px; }
+header { display: grid; gap: 14px; }
+
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.stat { background: var(--panel); padding: 16px 18px; display: grid; gap: 2px; }
+.stat b { font-family: var(--display); font-size: 1.9rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.stat span { color: var(--muted); font-size: 0.9rem; }
+
+/* Wiring diagram */
+.diagram { overflow-x: auto; }
+.dg { min-width: 640px; display: grid; gap: 10px; font-size: 0.88rem; }
+.tier { display: flex; gap: 10px; flex-wrap: nowrap; justify-content: center; }
+.node { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; text-align: center; min-width: 0; }
+.node small { display: block; color: var(--muted); font-family: var(--mono); font-size: 0.72rem; }
+.node.core { border: 2px solid var(--accent); }
+.arrow { text-align: center; color: var(--muted); font-family: var(--mono); font-size: 0.75rem; }
+.host { border: 2px solid var(--accent); border-radius: 12px; padding: 12px; display: grid; gap: 10px; background: var(--accent-soft); }
+.host > .label { font-family: var(--mono); font-size: 0.75rem; color: var(--accent); letter-spacing: 0.08em; text-transform: uppercase; }
+.guests { display: grid; grid-template-columns: 1.4fr 1fr 1.6fr; gap: 10px; }
+.guest { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; display: grid; gap: 6px; align-content: start; }
+.guest h4 { margin: 0; font-family: var(--display); font-size: 0.95rem; }
+.radios { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.chip { display: inline-block; font-family: var(--mono); font-size: 0.72rem; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.zigbee { color: var(--zigbee); background: var(--zigbee-bg); }
+.zwave { color: var(--zwave); background: var(--zwave-bg); }
+.wifi { color: var(--wifi); background: var(--wifi-bg); }
+.matter { color: var(--matter); background: var(--matter-bg); }
+.ble { color: var(--ble); background: var(--ble-bg); }
+.poe { color: var(--poe); background: var(--poe-bg); }
+
+/* Spec rows */
+.spec { border-top: 1px solid var(--line); }
+.row { display: grid; grid-template-columns: 200px 1fr; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.row dt { font-weight: 600; }
+.row dd { margin: 0; color: var(--muted); min-width: 0; }
+.row dd .chip { margin-right: 4px; }
+dl { margin: 0; }
+
+.cats { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+.cat { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 8px; align-content: start; }
+.cat ul { margin: 0; padding-left: 18px; color: var(--muted); font-size: 0.92rem; display: grid; gap: 3px; }
+.cat li b { color: var(--ink); font-weight: 600; }
+.cat .radios { margin-top: 2px; }
+
+.autos { display: grid; gap: 0; border-top: 1px solid var(--line); }
+.auto { display: grid; grid-template-columns: 1fr 1.6fr; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+.auto h3 { font-size: 1rem; }
+.auto p { color: var(--muted); font-size: 0.95rem; }
+
+.map { display: grid; gap: 0; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--panel); }
+.map div { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+.map div:last-child { border-bottom: 0; }
+.map .head { font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); background: var(--bg); }
+.map span:first-child { color: var(--muted); }
+
+.note { background: var(--accent-soft); border-radius: 10px; padding: 16px 18px; display: grid; gap: 8px; }
+.note ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+footer { color: var(--muted); font-size: 0.85rem; font-family: var(--mono); }
+
+@media (max-width: 640px) {
+  .row, .auto, .map div { grid-template-columns: 1fr; gap: 4px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Home Assistant 2026.10 · HA OS 18.4 · Proxmox VE 8.4</div>
+    <h1>A whole-house Home Assistant build</h1>
+    <p class="lede">One home server runs the smart home, the security cameras, media and network services. Almost everything is controlled locally on the home network, so lights, locks and automations keep working when the internet is down.</p>
+  </header>
+
+  <section aria-label="At a glance">
+    <div class="stats">
+      <div class="stat"><b>~4,000</b><span>entities in Home Assistant</span></div>
+      <div class="stat"><b>111</b><span>automations</span></div>
+      <div class="stat"><b>43</b><span>Zigbee devices</span></div>
+      <div class="stat"><b>19</b><span>Z-Wave devices</span></div>
+      <div class="stat"><b>7</b><span>cameras with local AI detection</span></div>
+      <div class="stat"><b>40</b><span>integrations in use</span></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">How it's wired</div>
+    <h2>The architecture</h2>
+    <p>Home Assistant doesn't need a hub of its own like SmartThings does. It runs on any computer, and radio adapters plug into it (or sit on the network) to talk to Zigbee and Z-Wave devices.</p>
+    <div class="diagram" role="img" aria-label="Diagram: internet to router to managed switch; switch feeds Wi-Fi mesh, PoE cameras, the Zigbee coordinator and the Proxmox server, which hosts Home Assistant, Frigate and service containers">
+      <div class="dg">
+        <div class="tier"><div class="node">Internet<small>Cloudflare tunnel for remote access</small></div></div>
+        <div class="arrow">│</div>
+        <div class="tier"><div class="node">TP-Link Archer AX1500<small>router</small></div></div>
+        <div class="arrow">│</div>
+        <div class="tier"><div class="node core">Cisco SG350-28P<small>28-port managed PoE switch · monitored by HA over SNMP</small></div></div>
+        <div class="arrow">┌──────────────┬──────────────┬──────────────┐</div>
+        <div class="tier">
+          <div class="node">Linksys Velop + Nest Wifi<small>Wi-Fi mesh</small></div>
+          <div class="node">Reolink PoE cameras<small>doorbell · floodlight · bullet</small></div>
+          <div class="node">SMLIGHT SLZB-06MU<small>Zigbee coordinator over Ethernet</small></div>
+        </div>
+        <div class="arrow">│</div>
+        <div class="host">
+          <div class="label">Proxmox server · Intel i7-8700K · 32 GB RAM · RTX 2060 Super</div>
+          <div class="guests">
+            <div class="guest">
+              <h4>Home Assistant OS (VM)</h4>
+              <small style="color:var(--muted)">6 cores · 10 GB RAM</small>
+              <div class="radios">
+                <span class="chip zwave">Z-Wave · Zooz 800 LR USB</span>
+                <span class="chip ble">Bluetooth · passed through</span>
+                <span class="chip zigbee">Zigbee2MQTT</span>
+                <span class="chip matter">Matter server</span>
+              </div>
+            </div>
+            <div class="guest">
+              <h4>Frigate NVR (VM)</h4>
+              <small style="color:var(--muted)">6 cores · 8 GB · GPU passed through for object and face detection</small>
+            </div>
+            <div class="guest">
+              <h4>Containers (LXC)</h4>
+              <small style="color:var(--muted)">Plex media server · AdGuard Home DNS ad-blocking · Vaultwarden passwords · Actual Budget</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">The core</div>
+    <h2>Server and radios</h2>
+    <dl class="spec">
+      <div class="row"><dt>Server</dt><dd>Custom desktop: Intel Core i7-8700K, 32 GB RAM, Samsung 970 EVO NVMe plus SSDs, 3.6 TB external drive for media, NVIDIA RTX 2060 Super</dd></div>
+      <div class="row"><dt>Hypervisor</dt><dd>Proxmox VE 8.4. Home Assistant runs as a virtual machine, so it can be snapshotted and backed up as a whole</dd></div>
+      <div class="row"><dt>Zigbee</dt><dd><span class="chip zigbee">Zigbee</span> SMLIGHT SLZB-06MU, a network-attached (PoE) coordinator, running Zigbee2MQTT</dd></div>
+      <div class="row"><dt>Z-Wave</dt><dd><span class="chip zwave">Z-Wave</span> Zooz ZST39 800-series Long Range USB stick, running Z-Wave JS</dd></div>
+      <div class="row"><dt>Bluetooth</dt><dd><span class="chip ble">BLE</span> Built-in motherboard radio plus an ESP32 Bluetooth proxy, used for toothbrushes and presence beacons</dd></div>
+      <div class="row"><dt>Matter</dt><dd><span class="chip matter">Matter</span> Matter server add-on for newer Matter devices</dd></div>
+      <div class="row"><dt>Wi-Fi devices</dt><dd><span class="chip wifi">Wi-Fi</span> Talked to directly on the home network wherever possible: TP-Link Tapo, Meross, Sonos, Google Cast, LG TVs, ESPHome, Tasmota</dd></div>
+      <div class="row"><dt>Backups</dt><dd>Nightly Home Assistant backups to Google Drive, plus Proxmox backups of the whole VM</dd></div>
+      <div class="row"><dt>Remote access</dt><dd>Cloudflare tunnel to a private domain. No ports are opened on the router</dd></div>
+    </dl>
+  </section>
+
+  <section>
+    <div class="eyebrow">What's connected</div>
+    <h2>Devices by room job</h2>
+    <div class="cats">
+      <div class="cat">
+        <h3>Lighting and switches</h3>
+        <ul>
+          <li><b>18</b> TP-Link Tapo S500/S505 wall switches and S505D dimmers</li>
+          <li><b>14</b> IKEA TRÅDFRI bulbs, a FLOALT panel and a STOFTMOLN lamp</li>
+          <li>Philips Hue BR30s, WiZ and Tuya colour bulbs, LED strips</li>
+          <li>Eaton and Leviton Z-Wave switches and dimmers</li>
+          <li>An old SmartThings-branded bulb, paired straight to Zigbee</li>
+        </ul>
+        <div class="radios"><span class="chip wifi">Wi-Fi</span><span class="chip zigbee">Zigbee</span><span class="chip zwave">Z-Wave</span><span class="chip matter">Matter</span></div>
+      </div>
+      <div class="cat">
+        <h3>Shades</h3>
+        <ul>
+          <li><b>8</b> IKEA FYRTUR roller blinds</li>
+          <li><b>2</b> IKEA PRAKTLYSING cellular blinds</li>
+          <li>IKEA open/close remotes</li>
+        </ul>
+        <div class="radios"><span class="chip zigbee">Zigbee</span></div>
+      </div>
+      <div class="cat">
+        <h3>Security</h3>
+        <ul>
+          <li>Ring Alarm: <b>7</b> contact sensors and the keypad (Z-Wave, no Ring hub needed)</li>
+          <li>Yale Assure touchscreen deadbolt</li>
+          <li>Aqara door, water-leak and temperature sensors</li>
+          <li>Garage door opener (Meross, local control)</li>
+        </ul>
+        <div class="radios"><span class="chip zwave">Z-Wave</span><span class="chip zigbee">Zigbee</span><span class="chip wifi">Wi-Fi</span></div>
+      </div>
+      <div class="cat">
+        <h3>Cameras</h3>
+        <ul>
+          <li>Reolink PoE video doorbell, Duo floodlight and RLC-520A</li>
+          <li>Wyze camera in the garage, via an RTSP bridge</li>
+          <li>Frigate records everything locally and detects people, cars and faces on the GPU</li>
+        </ul>
+        <div class="radios"><span class="chip poe">PoE</span><span class="chip wifi">Wi-Fi</span></div>
+      </div>
+      <div class="cat">
+        <h3>Climate and air</h3>
+        <ul>
+          <li>ecobee4 thermostat</li>
+          <li><b>3</b> IKEA VINDSTYRKA air quality sensors</li>
+          <li>Hampton Bay ceiling fans, Tapo fan switches</li>
+          <li>Bathroom exhaust fans driven by humidity</li>
+        </ul>
+        <div class="radios"><span class="chip wifi">Wi-Fi</span><span class="chip zigbee">Zigbee</span></div>
+      </div>
+      <div class="cat">
+        <h3>Speakers, TVs and voice</h3>
+        <ul>
+          <li><b>12</b> Google Home Minis, <b>6</b> Nest Hubs, Lenovo Smart Clock</li>
+          <li>Sonos Play:5, Playbars and IKEA SYMFONISK speakers</li>
+          <li>LG OLED and webOS TVs, onn. Google TV boxes</li>
+          <li>Music Assistant for whole-house audio, plus local voice (Whisper, Piper, openWakeWord)</li>
+        </ul>
+        <div class="radios"><span class="chip wifi">Wi-Fi</span></div>
+      </div>
+      <div class="cat">
+        <h3>Appliances and car</h3>
+        <ul>
+          <li>GE washer and dryer, Bosch dishwasher, LG fridge</li>
+          <li>Tesla Model S and Tesla Wall Connector</li>
+          <li>Oral-B Bluetooth toothbrushes</li>
+        </ul>
+        <div class="radios"><span class="chip wifi">Wi-Fi</span><span class="chip ble">BLE</span></div>
+      </div>
+      <div class="cat">
+        <h3>Wall panels and phones</h3>
+        <ul>
+          <li>Amazon Fire HD 8 wall tablet running a custom dashboard in Fully Kiosk</li>
+          <li><b>2</b> Sonoff NSPanels running ESPHome</li>
+          <li>Family iPhones, Androids, iPads and a Galaxy Watch with the companion app, used for presence and alerts</li>
+        </ul>
+        <div class="radios"><span class="chip wifi">Wi-Fi</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">What it actually does</div>
+    <h2>Automations from daily life</h2>
+    <div class="autos">
+      <div class="auto"><h3>Approach lights</h3><p>After dark, when the cameras see a person on the driveway or at the door, the right outside light turns on. It turns off three minutes after they leave, unless someone switched it on by hand.</p></div>
+      <div class="auto"><h3>Garage on arrival</h3><p>When a family member's phone arrives home, the garage door opens for them.</p></div>
+      <div class="auto"><h3>Doorbell face recognition</h3><p>Frigate recognises family faces at the front door, so alerts can say who is there instead of just "person detected".</p></div>
+      <div class="auto"><h3>EV plug-in estimate</h3><p>Plugging in the Tesla sends a phone notification with the expected time to reach the charge limit. On weekends it starts charging straight away instead of waiting for the overnight schedule.</p></div>
+      <div class="auto"><h3>Bathroom fans and timers</h3><p>Shower humidity runs the exhaust fans. Picking up a toothbrush starts a spoken two-minute timer on the bathroom smart clock.</p></div>
+      <div class="auto"><h3>Spoken announcements</h3><p>Announcements play on the Sonos and Google speakers. Music pauses for the announcement and resumes afterwards.</p></div>
+      <div class="auto"><h3>Network watchdog</h3><p>Home Assistant watches the network switch and DNS server, and sends a quiet phone alert if a Wi-Fi access point, camera or the Zigbee coordinator drops off the network.</p></div>
+      <div class="auto"><h3>Tiered notifications</h3><p>Alerts are sorted into critical, normal and quiet levels, so a leak or smoke alarm breaks through Do Not Disturb but routine updates never wake anyone.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">For a SmartThings user</div>
+    <h2>What replaces what</h2>
+    <div class="map">
+      <div class="head"><span>SmartThings</span><span>Home Assistant</span></div>
+      <div><span>SmartThings hub</span><span>Any computer (or an HA Green) plus a Zigbee and Z-Wave adapter</span></div>
+      <div><span>Routines and Scenes</span><span>Automations, Scripts and Scenes, with conditions, delays, templates and variables</span></div>
+      <div><span>SmartApps and Edge drivers</span><span>Integrations (built in, or community ones through HACS)</span></div>
+      <div><span>SmartThings app</span><span>HA companion app for iPhone and Android, with fully customisable dashboards</span></div>
+      <div><span>Cloud-dependent control</span><span>Local control by default. Internet is only needed for cloud-only brands and remote access</span></div>
+      <div><span>Alexa / Google voice</span><span>Still works through HA, or use HA's own local voice assistant</span></div>
+    </div>
+    <div class="note">
+      <h3>Getting started doesn't need all of this</h3>
+      <ul>
+        <li>A Home Assistant Green plus a Zigbee/Thread dongle and a Z-Wave stick will run a typical SmartThings home.</li>
+        <li>Zigbee and Z-Wave devices from SmartThings pair directly to the new adapters. Re-pair them room by room and run both systems side by side during the move.</li>
+        <li>Wi-Fi devices like Tapo, Sonos, Hue and Google Cast are usually found automatically.</li>
+        <li>The Proxmox server, cameras and extra services here were added over time. They're optional.</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>Inventory taken from the live system on 29 Oct 2026.</footer>
+</div>
+</body>
+</html>
